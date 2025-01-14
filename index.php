@@ -132,13 +132,9 @@ require_once './pages/common/header.php'
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-300 py-8">
-        <div class="container mx-auto px-6 text-center">
-            <p>© 2024 Académie de Prestige. Tous droits réservés.</p>
-        </div>
-    </footer>
 
-    <script src="/public/assets/script.js"></script>
-</body>
-</html>
+
+<?php
+
+include_once './pages/common/footer.php';
+?>

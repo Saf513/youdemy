@@ -13,6 +13,8 @@
     protected bool $isActive;
     protected $createdAt;
     protected $updatedAt;
+    protected ?string $photoUrl = null;
+
 
     public function __construct($id = null, $nom = null, $email = null, $password = null, $role = null, $isActive = true, $createdAt = null, $updatedAt = null)
     {
@@ -68,6 +70,11 @@
         return $this->updatedAt;
     }
 
+    public function getPhotoUrl(): ?string
+    {
+        return $this->photoUrl;
+    }
+
     // les setters
 
     public function setNom(string $nom)
@@ -92,6 +99,12 @@
         $this->isActive = $isActive;
     }
 
+    public function setPhotoUrl(?string $photoUrl): void
+    {
+        $this->photoUrl = $photoUrl;
+    }
+
+
     public function toArray(): array
     {
         return [
@@ -103,10 +116,25 @@
             'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
             'updated_at' => $this->updatedAt?->format('Y-m-d H:i:s'),
             'is_active' => $this->isActive,
+            'photoUrl' => $this->photoUrl,
+
         ];
     }
+    public function loadData(array $data): void
+    {
+       $this->id = (int) $data['id'];
+       $this->nom = $data['full_name'];
+        $this->email = $data['email'];
+       $this->password = $data['password'];
+      $this->role = $data['role'];
+      $this->isActive = $data['status'] === 'active';
+      $this->createdAt = new DateTime($data['created_at']);
+     $this->updatedAt = $data['updated_at'] ? new DateTime($data['updated_at']) : null;
+     $this->photoUrl = $data['photoUrl'] ?? null;
+  }
 
-    // abstract public function login(): ?User;
-    // abstract public function logout(): ?User;
-    abstract public function updateProfile(array $data): bool;
+    // abstract public function login(): bool;
+    // abstract public function logout(): void;
+    abstract public function updateProfile(array $data, array $photoFile = null): bool;
+    abstract public function save(): bool;
 }

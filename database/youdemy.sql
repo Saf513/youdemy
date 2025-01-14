@@ -112,3 +112,6 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- ajouter un column de miniature dans cour
+ alter table courses add column miniature varchar(255) default null ;

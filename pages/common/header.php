@@ -22,7 +22,7 @@
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="#" class="flex items-center">
                 <img src="/public/assets/img/8640011fde624ac191771185fef03908-free.png" alt="Logo de l'Académie" class="h-8 mr-2">
-                <span class="font-playfair font-bold text-xl">Académie de Prestige</span>
+                <span class="font-playfair font-bold text-xl">Youdemy</span>
             </a>
             <nav class="hidden md:flex space-x-6">
                 <a href="/index.php" class="hover:text-gray-600">Accueil</a>
