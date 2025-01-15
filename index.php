@@ -1,6 +1,6 @@
 
 <?php
-require_once './pages/common/header.php' 
+require_once  './pages/common/header.php' ;
 ?>
     <!-- Hero Section -->
     <section class="bg-gradient-to-br from-blue-100 to-purple-50 py-20 relative overflow-hidden">

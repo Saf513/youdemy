@@ -103,7 +103,7 @@ class Teacher extends User
          return $db->executeQuery($query,['teacher_id' => $this->id]);
      }
 
-      public function updateProfile(array $data, array $photoFile = null): bool
+      public function updateProfile(array $data, ?array $photoFile = null): bool
      {
          $this->setNom(InputValidator::sanitizeString($data['nom'] ?? $this->nom));
          $email =  InputValidator::sanitizeString($data['email'] ?? $this->email);
@@ -123,7 +123,7 @@ class Teacher extends User
     }
     private function saveCourse(dataBase $db, Course $course): bool
     {
-        if (isset($course->getId())) {
+        if (($course->getId() !== null)) {
              $query = "UPDATE courses SET title = :title, description = :description, content = :content, teacher_id = :teacher_id, category_id = :category_id, content_type = :content_type, content_url = :content_url, status = :status, thumbnailUrl = :thumbnailUrl WHERE id = :id";
              $params = [
                     'id' => $course->getId(),
@@ -171,33 +171,58 @@ class Teacher extends User
         }
     }
                                                                                                                                                                                                                                                                                                                                                        
-     public function save(): bool
+    
+ 
+    protected function saveNew(): bool
     {
-        $db = new Database('localhost', 'youdemy', 'root', '');
-        $query = "UPDATE users SET full_name = :full_name, email = :email, password = :password, role = :role, status = :status, photoUrl = :photoUrl,  updated_at = NOW() WHERE id = :id";
+        $db = new Database('localhost', 'youdemy', 'root', 'root');
+        $query = "INSERT INTO users (full_name, email, password, role, status, created_at, updated_at) 
+                VALUES (:full_name, :email, :password, :role, :status, NOW(), NOW())";
         $params = [
-           'id' => $this->id,
             'full_name' => $this->getNom(),
             'email' => $this->getEmail(),
             'password' => $this->getPassword(),
             'role' => $this->getRole(),
-             'status' => $this->isActive() ? 'active' : 'pending',
+            'status' => $this->isActive() ? 'active' : 'pending'
+        ];
+        if ($db->executeQuery($query, $params)) {
+            $this->id = (int)$db->getConnection()->lastInsertId();
+            return true;
+        }
+        return false;
+    }
+
+    public function save(): bool
+    {
+        if ($this->id === null) {
+            return $this->saveNew();
+        }
+
+        $db = new Database('localhost', 'youdemy', 'root', 'root');
+        $query = "UPDATE users SET full_name = :full_name, email = :email, password = :password, role = :role, status = :status, photoUrl = :photoUrl, updated_at = NOW() WHERE id = :id";
+        $params = [
+            'id' => $this->id,
+            'full_name' => $this->getNom(),
+            'email' => $this->getEmail(),
+            'password' => $this->getPassword(),
+            'role' => $this->getRole(),
+            'status' => $this->isActive() ? 'active' : 'pending',
             'photoUrl' => $this->photoUrl
         ];
-       return $db->executeQuery($query, $params);
+        return $db->executeQuery($query, $params);
     }
 
     public function signUp(array $data): bool
     {
-          $this->setNom(InputValidator::sanitizeString($data['nom'] ?? ''));
-          $email = InputValidator::sanitizeString($data['email'] ?? '');
-          if(!InputValidator::validateEmail($email)) return false;
-          $this->setEmail($email);
-          $password = $data['password'] ?? '';
-           if(!InputValidator::validatePassword($password)) return false;
-          $this->setPassword(password_hash($password, PASSWORD_DEFAULT));
-          $this->setIsActive(true);
+        $this->setNom(InputValidator::sanitizeString($data['full_name'] ?? ''));
+        $email = InputValidator::sanitizeString($data['email'] ?? '');
+        if (!InputValidator::validateEmail($email)) return false;
+        $this->setEmail($email);
+        $password = $data['password'] ?? '';
+        if (!InputValidator::validatePassword($password)) return false;
+        $this->setPassword(password_hash($password, PASSWORD_DEFAULT));
+        $this->setIsActive(true);
 
-          return $this->save();
-   }
+        return $this->save();
+    }
 }

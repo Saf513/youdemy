@@ -48,7 +48,7 @@ class Admin extends User
          return ['message' => 'manage categories by admin'];
     }
 
-   public function updateProfile(array $data, array $photoFile = null): bool
+   public function updateProfile(array $data, ?array $photoFile = null): bool
      {
        $this->setNom(InputValidator::sanitizeString($data['nom'] ?? $this->nom));
          $email =  InputValidator::sanitizeString($data['email'] ?? $this->email);

@@ -5,10 +5,10 @@
   abstract class User
 {
 
-    protected int $id;
-    protected string $nom;
-    protected string $email;
-    protected string $password;
+    protected ?int $id;
+    protected ?string $nom;
+    protected ?string $email;
+    protected ?string $password;
     protected string $role;
     protected bool $isActive;
     protected $createdAt;
@@ -104,7 +104,11 @@
         $this->photoUrl = $photoUrl;
     }
 
-
+    public function login(): bool
+    {
+        Session::set('user_id', $this->id);
+        return true;
+    }
     public function toArray(): array
     {
         return [
@@ -134,7 +138,6 @@
   }
 
     // abstract public function login(): bool;
-    // abstract public function logout(): void;
-    abstract public function updateProfile(array $data, array $photoFile = null): bool;
+    abstract public function updateProfile(array $data, ?array $photoFile = null): bool;
     abstract public function save(): bool;
 }
