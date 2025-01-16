@@ -70,7 +70,7 @@ public function loadData(array $data, dataBase $db): void
 
 
 
-    public function getId(): ?int // Allow null return
+    public function getId(): ?int
 {
     return $this->id;
 }

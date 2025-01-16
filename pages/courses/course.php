@@ -59,7 +59,7 @@ try {
     
     $stmt->execute();
     $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+    
     $totalStmt = $db->getConnection()->query("SELECT FOUND_ROWS() as total");
     $totalResults = $totalStmt->fetch(PDO::FETCH_ASSOC);
     $totalCourses = $totalResults['total'];
@@ -109,9 +109,13 @@ include './../common/header.php';
     </form>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <?php foreach ($courses as $courseData): 
-            $course = new Course();
-            $course->loadData($courseData, $db);
+        <?php 
+            
+            foreach($courses as $courseData):
+                $course = new Course();
+                $course->loadData($courseData, $db); 
+                $id =$course -> getId();
+            
         ?>
             <div class="bg-white rounded-lg shadow-md overflow-hidden transform transition-transform duration-300 hover:scale-105">
                 <div class="aspect-w-16 aspect-h-9">
@@ -133,7 +137,7 @@ include './../common/header.php';
                         <?= htmlspecialchars(substr($course->getDescription(), 0, 150)) ?>...
                     </p>
                     <div class="flex justify-between items-center">
-                        <a href="view.php?id=<?= $course->getId() ?>" 
+                        <a href="../../pages/courses/view.php?id=<?php echo $id; ?>"
                            class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-300">
                             En savoir plus
                         </a>

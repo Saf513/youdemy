@@ -10,10 +10,10 @@ $db = new Database('localhost', 'youdemy', 'root', 'root');
 
 $courseId = $_GET['id'] ?? null;
 
-if ($courseId === null || !is_numeric($courseId)) {
-    header('Location: http://localhost:3000/pages/courses/course.php'); 
-    exit();
-}
+// if ($courseId === null || !is_numeric($courseId)) {
+//     header('Location: http://localhost:3000/pages/courses/course.php'); 
+//     exit();
+// }
 
 // Convertir en entier
 $courseId = (int)$courseId;

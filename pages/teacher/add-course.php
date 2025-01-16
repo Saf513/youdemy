@@ -81,6 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (empty($error_message)) {
             if ($teacher->createCourse($courseData)) {
+                var_dump($teacher->createCourse($courseData));
                 $success_message = 'Course created successfully!';
                 header('Location: dashboard.php');
                 exit();
