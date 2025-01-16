@@ -1,227 +1,178 @@
-<?php 
-require_once '../../pages/common/header.php';
+<?php
 
-?>
+require_once dirname(__DIR__, 2). '/classes/Course/Course.php';
+require_once dirname(__DIR__, 2) . '/classes/Utils/FileUploader.php';
+require_once dirname(__DIR__, 2). '/classes/User/Teacher.php';
+require_once dirname(__DIR__, 2) . '/classes/Course/Category.php';
+require_once dirname(__DIR__, 2) . '/classes/Course/tag.php';
+require_once dirname(__DIR__, 2) . '/classes/Auth/Authentification.php';
+require_once dirname(__DIR__, 2) . '/classes/Auth/Session.php';
+require_once dirname(__DIR__, 2) . '/classes/Security/CSRF.php';
+require_once dirname(__DIR__, 2) . '/classes/Security/InputValidator.php';
+require_once dirname(__DIR__, 2) . '/classes/Database/Database.php';
 
-    <!-- Filtres et Barre de Recherche -->
-    <div class="bg-gray-100 py-6">
-        <div class="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
-            <div class="mb-4 md:mb-0">
-                <ul id="categories" class="flex space-x-4">
-                    <li class="cursor-pointer hover:text-purple-500 transition-colors duration-300" data-category="all">Tous</li>
-                    <li class="cursor-pointer hover:text-purple-500 transition-colors duration-300" data-category="leadership">Leadership</li>
-                    <li class="cursor-pointer hover:text-purple-500 transition-colors duration-300" data-category="communication">Communication</li>
-                    <li class="cursor-pointer hover:text-purple-500 transition-colors duration-300" data-category="finance">Finance</li>
-                   
-                </ul>
+// ... (autres requires)
+
+$db = new Database('localhost', 'youdemy', 'root', 'root');
+
+define('UPLOAD_PATH', dirname(__DIR__, 2) . '/pages/teacher/uploads/courses/');
+
+define('UPLOAD_URL', '/pages/teacher/uploads/courses/');
+
+$coursesPerPage = 6;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $coursesPerPage;
+
+$categoryId = isset($_GET['category']) ? (int)$_GET['category'] : null;
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+$query = "SELECT SQL_CALC_FOUND_ROWS c.* FROM courses c";
+$params = [];
+$conditions = [];
+
+if ($categoryId) {
+    $conditions[] = "c.category_id = :category_id";
+    $params[':category_id'] = $categoryId;
+}
+
+if ($search) {
+    $conditions[] = "(c.title LIKE :search OR c.description LIKE :search)";
+    $params[':search'] = "%$search%";
+}
+
+if (!empty($conditions)) {
+    $query .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$query .= " LIMIT :offset, :limit";
+// Bind ces paramètres explicitement comme integers
+$params[':offset'] = (int)$offset;
+$params[':limit'] = (int)$coursesPerPage;
+
+try {
+    // Get courses
+    $stmt = $db->getConnection()->prepare($query);
+    
+    // Bind all parameters
+    foreach($params as $key => &$value) {
+        if ($key === ':offset' || $key === ':limit') {
+            $stmt->bindValue($key, $value, PDO::PARAM_INT);
+        } else {
+            $stmt->bindValue($key, $value);
+        }
+    }
+    
+    $stmt->execute();
+    $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+foreach($courses as $course){
+}
+    
+    
+    // Get total count
+    $totalStmt = $db->getConnection()->query("SELECT FOUND_ROWS() as total");
+    $totalResults = $totalStmt->fetch(PDO::FETCH_ASSOC);
+    $totalCourses = $totalResults['total'];
+    $totalPages = ceil($totalCourses / $coursesPerPage);
+    
+} catch (PDOException $e) {
+    // Log error and show user-friendly message
+    error_log("Database error: " . $e->getMessage());
+    $courses = [];
+    $totalPages = 0;
+}
+
+// Get all categories for filter
+$categories = Category::getAllCategories();
+
+ include './../common/header.php'; ?>
+
+    <!-- Search and Filters -->
+    <div class="container mx-auto px-4 py-8">
+        <form action="" method="GET" class="mb-8">
+            <div class="flex flex-wrap gap-4">
+                <div class="flex-1">
+                    <input type="text" name="search" value="<?= htmlspecialchars($search) ?>"
+                           plac eholder="Rechercher un cours..."
+                           class="w-full p-2 border rounded">
+                </div>
+                <div class="w-48">
+                    <select name="category" class="w-full p-2 border rounded">
+                        <option value="">Toutes les catégories</option>
+                        <?php foreach ($categories as $category): ?>
+                            <option value="<?= $category->getId() ?>" 
+                                    <?= $categoryId === $category->getId() ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($category->getName()) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" 
+                        class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Filtrer
+                </button>
             </div>
-            <div class="relative">
-                <input type="text" id="search-input" placeholder="Rechercher un cours..." class="border border-gray-300 rounded-md px-4 py-2 focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50 w-full md:w-64">
-                <img src="assets/icons/search.svg" alt="Rechercher" class="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none">
+        </form>
+
+        <!-- Courses Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <?php foreach ($courses as $courseData): 
+    $course = new Course();
+    $course->loadData($courseData, $db);
+   
+    ?>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="aspect-w-16 aspect-h-9">
+    <?php
+    $imageUrl = $course->getThumbnailUrl() 
+        ? UPLOAD_URL . htmlspecialchars($course->getThumbnailUrl())
+        : '/public/assets/img/data_analitic.jpg';
+    ?>
+    <img src="<?= $imageUrl ?>" 
+         alt="<?= htmlspecialchars($course->getTitle()) ?>"
+         class="w-full h-48 object-cover"
+         onerror="this.src='/public/assets/img/default-avatar.png'">
+</div>
+            <div class="p-6">
+                <h3 class="text-xl font-bold mb-2">
+                    <?= htmlspecialchars($course->getTitle()) ?>
+                </h3>
+                <p class="text-gray-600 mb-4">
+                    <?= htmlspecialchars(substr($course->getDescription(), 0, 150)) ?>...
+                </p>
+                <div class="flex justify-between items-center">
+                    <a href="view.php?id=<?= $course->getId() ?>" 
+                       class="text-blue-600 hover:underline">
+                        En savoir plus
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
+    <?php endforeach; ?>
+</div>
+<!-- Pagination -->
+<div class="mt-8 flex justify-center space-x-2 mb-4">
+    <?php if ($page > 1): ?>
+        <a href="?page=<?= $page - 1 ?>&category=<?= $categoryId ?>&search=<?= htmlspecialchars($search) ?>" 
+           class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100">
+            Précédent
+        </a>
+    <?php endif; ?>
+
+    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+        <a href="?page=<?= $i ?>&category=<?= $categoryId ?>&search=<?= htmlspecialchars($search) ?>" 
+           class="px-4 py-2 border <?= $i === $page ? 'bg-blue-600 text-white' : 'border-gray-300 hover:bg-gray-100' ?> rounded">
+            <?= $i ?>
+        </a>
+    <?php endfor; ?>
+
+    <?php if ($page < $totalPages): ?>
+        <a href="?page=<?= $page + 1 ?>&category=<?= $categoryId ?>&search=<?= htmlspecialchars($search) ?>" 
+           class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100">
+            Suivant
+        </a>
+    <?php endif; ?>
+</div>
 
 
-    <!-- Grille des Cours -->
-     <section id="courses-list" class="py-16">
-        <div class="container mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="course-cards">
-                <!-- Les cartes de cours seront insérées ici -->
-            </div>
-
-          <!-- Pagination -->
-          <div class="mt-8 flex justify-center">
-                <button id="prev-page" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-md mx-1 hidden">Précédent</button>
-               <div id="page-numbers" class="flex"></div>
-                <button id="next-page" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-md mx-1 hidden">Suivant</button>
-           </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-300 py-8">
-        <div class="container mx-auto px-6 text-center">
-            <p>© 2024 Académie de Prestige. Tous droits réservés.</p>
-        </div>
-    </footer>
-    <script src="script.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const coursesPerPage = 6; // Nombre de cours par page
-             let currentPage = 1;
-             let courses = [ // Simulez une liste de cours
-                     { id: 1, title: 'Le leadership inspirant', category: 'leadership', price: 299, imageUrl: 'assets/images/course-1.jpg', description: "Découvrez les secrets d'un leadership qui motive et inspire les équipes. Stratégies avancées, exemples pratiques." },
-                     { id: 2, title: 'La communication persuasive', category: 'communication', price: 349, imageUrl: 'assets/images/course-2.jpg', description: "Maîtrisez l'art de la persuasion. Apprenez à influencer, négocier et convaincre. Techniques et mises en situation réelles." },
-                     { id: 3, title: 'La finance pour les décideurs', category: 'finance', price: 499, imageUrl: 'assets/images/course-3.jpg', description: "Acquérez une solide compréhension financière. Prenez des décisions éclairées, gérez vos investissements avec assurance." },
-                     { id: 4, title: 'L\'art du storytelling', category: 'communication', price: 249, imageUrl: 'assets/images/course-4.jpg',description:"Découvrez l'art de captiver votre public grâce au storytelling. Une méthode puissante pour communiquer et persuader."},
-                     { id: 5, title: 'Gestion stratégique des opérations', category: 'leadership', price: 399, imageUrl: 'assets/images/course-5.jpg',description:"Apprenez à optimiser vos opérations pour une croissance durable. Méthodes et outils pour une gestion efficace."},
-                     { id: 6, title: 'Introduction à l\'investissement boursier', category: 'finance', price: 299, imageUrl: 'assets/images/course-6.jpg', description: "Découvrez les bases de l'investissement boursier. Apprenez à faire des choix éclairés et à gérer les risques."},
-                    { id: 7, title: 'Le leadership en situation de crise', category: 'leadership', price: 449, imageUrl: 'assets/images/course-7.jpg',description:"Découvrez comment mener votre équipe à travers les crises. Stratégies éprouvées pour les leaders en temps difficiles."},
-                     { id: 8, title: 'Communication non verbale', category: 'communication', price: 349, imageUrl: 'assets/images/course-8.jpg',description:"Apprenez l'importance de la communication non verbale. Développez votre charisme et améliorez vos interactions."},
-                     { id: 9, title: 'Les fondamentaux de la comptabilité', category: 'finance', price: 299, imageUrl: 'assets/images/course-9.jpg',description: "Apprenez les bases de la comptabilité financière. Comprenez les bilans et les comptes de résultat."}
-             ];
-
-
-             function displayCourses(page){
-                const courseCards = document.getElementById('course-cards');
-                courseCards.innerHTML = '';
-
-                  const startIndex = (page - 1) * coursesPerPage;
-                  const endIndex = startIndex + coursesPerPage;
-                  const coursesToShow = courses.slice(startIndex, endIndex);
-
-                coursesToShow.forEach(course => {
-                     const courseCard = document.createElement('div');
-                     courseCard.classList.add('bg-white', 'shadow-lg', 'rounded-lg', 'overflow-hidden');
-                     courseCard.innerHTML = `
-                          <img src="${course.imageUrl}" alt="${course.title}" class="w-full h-48 object-cover">
-                          <div class="p-6">
-                               <h3 class="text-xl font-semibold mb-2">${course.title}</h3>
-                                <p class="text-gray-700 mb-4">${course.description}</p>
-                               <div class="flex justify-between items-center">
-                                   <span class="font-bold text-purple-500">$${course.price}</span>
-                                 <a href="#" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded-md transition-colors duration-300">En savoir plus</a>
-                               </div>
-                           </div>
-                        `;
-                        courseCards.appendChild(courseCard);
-                });
-             }
-
-            function updatePagination(){
-
-                 const totalPages = Math.ceil(courses.length / coursesPerPage);
-                  const pageNumbersDiv = document.getElementById('page-numbers');
-                pageNumbersDiv.innerHTML = '';
-
-
-                 for (let i = 1; i <= totalPages; i++){
-                         const pageNumberButton = document.createElement('button');
-                      pageNumberButton.textContent = i;
-                      pageNumberButton.classList.add('px-4', 'py-2', 'rounded-md', 'mx-1', 'hover:bg-gray-300', 'transition-colors', 'duration-300');
-
-                      if (i === currentPage){
-                          pageNumberButton.classList.add('bg-purple-200');
-                      }
-
-                         pageNumberButton.addEventListener('click', () =>{
-                             currentPage = i;
-                             displayCourses(currentPage);
-                             updatePagination();
-                             updateButtonsVisibility();
-                         });
-
-                      pageNumbersDiv.appendChild(pageNumberButton)
-                    }
-                }
-
-            function updateButtonsVisibility() {
-                 const totalPages = Math.ceil(courses.length / coursesPerPage);
-                 const prevButton = document.getElementById('prev-page');
-                 const nextButton = document.getElementById('next-page');
-
-                 if (currentPage === 1){
-                     prevButton.classList.add('hidden')
-                 }else {
-                      prevButton.classList.remove('hidden')
-                 }
-
-                if (currentPage === totalPages || totalPages === 0){
-                    nextButton.classList.add('hidden')
-                 }else {
-                    nextButton.classList.remove('hidden')
-                 }
-             }
-
-
-            function filterCourses(category){
-
-                  if(category === 'all'){
-                    courses = [
-                        { id: 1, title: 'Le leadership inspirant', category: 'leadership', price: 299, imageUrl: 'assets/images/course-1.jpg', description: "Découvrez les secrets d'un leadership qui motive et inspire les équipes. Stratégies avancées, exemples pratiques." },
-                        { id: 2, title: 'La communication persuasive', category: 'communication', price: 349, imageUrl: 'assets/images/course-2.jpg', description: "Maîtrisez l'art de la persuasion. Apprenez à influencer, négocier et convaincre. Techniques et mises en situation réelles." },
-                        { id: 3, title: 'La finance pour les décideurs', category: 'finance', price: 499, imageUrl: 'assets/images/course-3.jpg', description: "Acquérez une solide compréhension financière. Prenez des décisions éclairées, gérez vos investissements avec assurance." },
-                        { id: 4, title: 'L\'art du storytelling', category: 'communication', price: 249, imageUrl: 'assets/images/course-4.jpg',description:"Découvrez l'art de captiver votre public grâce au storytelling. Une méthode puissante pour communiquer et persuader."},
-                        { id: 5, title: 'Gestion stratégique des opérations', category: 'leadership', price: 399, imageUrl: 'assets/images/course-5.jpg',description:"Apprenez à optimiser vos opérations pour une croissance durable. Méthodes et outils pour une gestion efficace."},
-                        { id: 6, title: 'Introduction à l\'investissement boursier', category: 'finance', price: 299, imageUrl: 'assets/images/course-6.jpg', description: "Découvrez les bases de l'investissement boursier. Apprenez à faire des choix éclairés et à gérer les risques."},
-                         { id: 7, title: 'Le leadership en situation de crise', category: 'leadership', price: 449, imageUrl: 'assets/images/course-7.jpg',description:"Découvrez comment mener votre équipe à travers les crises. Stratégies éprouvées pour les leaders en temps difficiles."},
-                        { id: 8, title: 'Communication non verbale', category: 'communication', price: 349, imageUrl: 'assets/images/course-8.jpg',description:"Apprenez l'importance de la communication non verbale. Développez votre charisme et améliorez vos interactions."},
-                        { id: 9, title: 'Les fondamentaux de la comptabilité', category: 'finance', price: 299, imageUrl: 'assets/images/course-9.jpg',description: "Apprenez les bases de la comptabilité financière. Comprenez les bilans et les comptes de résultat."}
-
-                      ];
-                  } else{
-                         courses =  [
-                            { id: 1, title: 'Le leadership inspirant', category: 'leadership', price: 299, imageUrl: 'assets/images/course-1.jpg', description: "Découvrez les secrets d'un leadership qui motive et inspire les équipes. Stratégies avancées, exemples pratiques." },
-                             { id: 2, title: 'La communication persuasive', category: 'communication', price: 349, imageUrl: 'assets/images/course-2.jpg', description: "Maîtrisez l'art de la persuasion. Apprenez à influencer, négocier et convaincre. Techniques et mises en situation réelles." },
-                             { id: 3, title: 'La finance pour les décideurs', category: 'finance', price: 499, imageUrl: 'assets/images/course-3.jpg', description: "Acquérez une solide compréhension financière. Prenez des décisions éclairées, gérez vos investissements avec assurance." },
-                            { id: 4, title: 'L\'art du storytelling', category: 'communication', price: 249, imageUrl: 'assets/images/course-4.jpg',description:"Découvrez l'art de captiver votre public grâce au storytelling. Une méthode puissante pour communiquer et persuader."},
-                             { id: 5, title: 'Gestion stratégique des opérations', category: 'leadership', price: 399, imageUrl: 'assets/images/course-5.jpg',description:"Apprenez à optimiser vos opérations pour une croissance durable. Méthodes et outils pour une gestion efficace."},
-                            { id: 6, title: 'Introduction à l\'investissement boursier', category: 'finance', price: 299, imageUrl: 'assets/images/course-6.jpg', description: "Découvrez les bases de l'investissement boursier. Apprenez à faire des choix éclairés et à gérer les risques."},
-                             { id: 7, title: 'Le leadership en situation de crise', category: 'leadership', price: 449, imageUrl: 'assets/images/course-7.jpg',description:"Découvrez comment mener votre équipe à travers les crises. Stratégies éprouvées pour les leaders en temps difficiles."},
-                            { id: 8, title: 'Communication non verbale', category: 'communication', price: 349, imageUrl: 'assets/images/course-8.jpg',description:"Apprenez l'importance de la communication non verbale. Développez votre charisme et améliorez vos interactions."},
-                            { id: 9, title: 'Les fondamentaux de la comptabilité', category: 'finance', price: 299, imageUrl: 'assets/images/course-9.jpg',description: "Apprenez les bases de la comptabilité financière. Comprenez les bilans et les comptes de résultat."}
-                           ].filter(course => course.category === category);
-                  }
-                  currentPage = 1;
-                  displayCourses(currentPage);
-                  updatePagination();
-                  updateButtonsVisibility();
-            }
-
-            document.getElementById('categories').addEventListener('click', function(event) {
-                if(event.target.tagName === 'LI'){
-                  const category = event.target.dataset.category;
-                    filterCourses(category)
-                }
-            });
-
-             function searchCourses(searchTerm){
-                courses =   [
-                    { id: 1, title: 'Le leadership inspirant', category: 'leadership', price: 299, imageUrl: 'assets/images/course-1.jpg', description: "Découvrez les secrets d'un leadership qui motive et inspire les équipes. Stratégies avancées, exemples pratiques." },
-                    { id: 2, title: 'La communication persuasive', category: 'communication', price: 349, imageUrl: 'assets/images/course-2.jpg', description: "Maîtrisez l'art de la persuasion. Apprenez à influencer, négocier et convaincre. Techniques et mises en situation réelles." },
-                    { id: 3, title: 'La finance pour les décideurs', category: 'finance', price: 499, imageUrl: 'assets/images/course-3.jpg', description: "Acquérez une solide compréhension financière. Prenez des décisions éclairées, gérez vos investissements avec assurance." },
-                    { id: 4, title: 'L\'art du storytelling', category: 'communication', price: 249, imageUrl: 'assets/images/course-4.jpg',description:"Découvrez l'art de captiver votre public grâce au storytelling. Une méthode puissante pour communiquer et persuader."},
-                    { id: 5, title: 'Gestion stratégique des opérations', category: 'leadership', price: 399, imageUrl: 'assets/images/course-5.jpg',description:"Apprenez à optimiser vos opérations pour une croissance durable. Méthodes et outils pour une gestion efficace."},
-                    { id: 6, title: 'Introduction à l\'investissement boursier', category: 'finance', price: 299, imageUrl: 'assets/images/course-6.jpg', description: "Découvrez les bases de l'investissement boursier. Apprenez à faire des choix éclairés et à gérer les risques."},
-                    { id: 7, title: 'Le leadership en situation de crise', category: 'leadership', price: 449, imageUrl: 'assets/images/course-7.jpg',description:"Découvrez comment mener votre équipe à travers les crises. Stratégies éprouvées pour les leaders en temps difficiles."},
-                    { id: 8, title: 'Communication non verbale', category: 'communication', price: 349, imageUrl: 'assets/images/course-8.jpg',description:"Apprenez l'importance de la communication non verbale. Développez votre charisme et améliorez vos interactions."},
-                    { id: 9, title: 'Les fondamentaux de la comptabilité', category: 'finance', price: 299, imageUrl: 'assets/images/course-9.jpg',description: "Apprenez les bases de la comptabilité financière. Comprenez les bilans et les comptes de résultat."}
-
-               ].filter(course => course.title.toLowerCase().includes(searchTerm.toLowerCase()));
-                    currentPage = 1;
-                    displayCourses(currentPage);
-                    updatePagination();
-                 updateButtonsVisibility();
-
-            }
-
-             const searchInput = document.getElementById('search-input');
-              searchInput.addEventListener('input', function(){
-                    searchCourses(this.value)
-              });
-
-
-            document.getElementById('prev-page').addEventListener('click', function (){
-                 currentPage--;
-                 displayCourses(currentPage);
-                 updatePagination();
-                 updateButtonsVisibility();
-            });
-
-              document.getElementById('next-page').addEventListener('click', function (){
-                 currentPage++;
-                 displayCourses(currentPage);
-                 updatePagination();
-                 updateButtonsVisibility();
-            });
-
-
-            displayCourses(currentPage);
-             updatePagination();
-            updateButtonsVisibility();
-
-        });
-    </script>
-</body>
-</html>
+    <?php include '../../pages/common/footer.php'; ?>

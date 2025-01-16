@@ -2,6 +2,7 @@
 
 class Category
 {
+    
     private ?int $id;
     private string $name;
     private string $description;
@@ -68,20 +69,49 @@ class Category
         return null;
     }
 
-      public static function getAllCategories(): array|bool
-    {
-        $db = new Database('localhost', 'youdemy', 'root', '');
-          $query = "SELECT * FROM categories";
-         $result = $db->executeQuery($query,[]);
-        if($result){
-            $categories = [];
-            foreach($result as $categoryData){
-                $categories[] = new Category($categoryData['id'], $categoryData['name'], $categoryData['description']);
-            }
-            return $categories;
+    //   public static function getAllCategories(): array|bool
+    // {
+    //     $db = new Database('localhost', 'youdemy', 'root', 'root');
+    //       $query = "SELECT * FROM categories";
+    //      $result = $db->executeQuery($query,[]);
+    //     if($result){
+    //         $categories = [];
+            
+    //         foreach($result as $categoryData){
+    //             $categories[] = new Category($categoryData['id'], $categoryData['name'], $categoryData['description']);
+    //         }
+    //         return $categories;
+    //     }
+    //     return false;
+    // }
+
+    public static function getAllCategories(): array|bool
+{
+    $db = new Database('localhost', 'youdemy', 'root', 'root');
+    $query = "SELECT * FROM categories";
+    $result = $db->executeQuery($query, []);
+    
+    if ($result && is_array($result)) { // Vérifier que le résultat est un tableau
+        $categories = [];
+        foreach ($result as $categoryData) {
+            // Crée une nouvelle instance de Category pour chaque entrée
+            $categories[] = new Category(
+                $categoryData['id'],
+                $categoryData['name'],
+                $categoryData['description'] ?? null // Gestion des valeurs NULL pour description
+            );
         }
-        return false;
+        return $categories; // Retourne les catégories
     }
+
+    // En cas d'échec ou si le résultat n'est pas valide, retourner false
+    if (defined('DEBUG') && DEBUG) {
+        echo "Error fetching categories: ";
+        var_dump($result);
+    }
+    return false;
+}
+
        public function save(): bool
     {
         $db = new Database('localhost', 'youdemy', 'root', '');

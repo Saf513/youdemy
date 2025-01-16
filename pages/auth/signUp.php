@@ -46,12 +46,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'password' => $password
             ])) {
                 CSRF::unsetToken();
-                $user = Authentification::login($email, $password);
-                if($user) {
-                    (new Session())->set('user_id', $user->getId());
-                    header('Location: /');
-                    exit;
-                }
+
+                header('Location: http://localhost:3000/pages/auth/login.php');
+                exit;
             }
             $error = "Registration failed.";
         }

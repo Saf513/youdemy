@@ -41,26 +41,37 @@
           $this->conn = null;
       }
   
-      public function executeQuery(string $query, array $params): bool|array
+      public function executeQuery(string $query, array $params = []): bool|array
       {
-        try {
+          try {
               if (!$this->conn) {
-                   throw new PDOException('Base de données non connectée');
+                  throw new PDOException('Base de données non connectée');
               }
+      
               $stmt = $this->conn->prepare($query);
-              $stmt->execute($params);
-              if (strpos(strtolower($query), 'select') === 0) {
+             
+      
+              // Execute with or without parameters
+              $stmt->execute($params); 
+      
+              $queryType = strtoupper(strtok(trim($query), ' '));
+              if (in_array($queryType, ['SELECT', 'SHOW', 'DESCRIBE', 'EXPLAIN'])) {
                   return $stmt->fetchAll(PDO::FETCH_ASSOC);
               }
-  
-              return true;
-           }
-             catch (PDOException $e) {
-                 if(defined('DEBUG') && DEBUG){
-                      echo "Error executing query: " . $e->getMessage();
-                  }
-                 return false;
-           }
+      
+              // For other query types, return true on success or false on failure.
+              return $stmt->rowCount() > 0;
+          } catch (PDOException $e) {
+
+              // Debug error handling
+              if (defined('DEBUG') && DEBUG) {
+
+                  echo "Error executing query: " . $e->getMessage();
+              }
+              return false;
+          }
       }
+      
+      
   }
   ?>

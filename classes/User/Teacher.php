@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '\User.php';
 class Teacher extends User
 {
      private array $createdCourses = [];
@@ -9,10 +9,71 @@ class Teacher extends User
            $this->loadCreatedCourses();
     }
 
+
+    // private function saveCourse(Database $db, Course $course): bool
+    // {
+
+    //     if (isset($course->id)) {
+
+    //         $query = "UPDATE courses SET title = :title, description = :description, content = :content, user_id = :user_id, category_id = :category_id, content_type = :content_type, content_url = :content_url, status = :status, thumbnailUrl = :thumbnailUrl WHERE id = :id";
+    //          $params = [
+    //                 'id' => $course->getId(),
+    //                 'title' => $course->getTitle(),
+    //                 'description' => $course->getDescription(),
+    //                 'content' => $course->getContent(),
+    //                 'user_id' => $course->getAuthorId(),
+    //                 'category_id' => $course->getCategoryId(),
+    //                 'content_type' => $course->getContentType(),
+    //                 'content_url' => $course->getContentUrl(),
+    //                 'status' => $course->getStatus(),
+    //                 'thumbnailUrl' => $course->getThumbnailUrl(),
+    //              ];
+    //              $result = $db->executeQuery($query, $params);
+    //               $this->saveCourseTags($db,$course);
+    //              return $result;
+
+    //     } else {
+    //         $query = "INSERT INTO courses (title, description, content, user_id, category_id, createdAt, content_type, content_url, status, thumbnailUrl) VALUES (:title, :description, :content, :user_id, :category_id, NOW(), :content_type, :content_url, :status, :thumbnailUrl)";
+    //          $params = [
+    //                'title' => $course->getTitle(),
+    //                 'description' => $course->getDescription(),
+    //                 'content' => $course->getContent(),
+    //                 'user_id' => $course->getAuthorId(),
+    //                 'category_id' => $course->getCategoryId(),
+    //                 'content_type' => $course->getContentType(),
+    //                 'content_url' => $course->getContentUrl(),
+    //                   'status' => $course->getStatus(),
+    //                  'thumbnailUrl' => $course->getThumbnailUrl(),
+    //               ];
+    //          $result =  $db->executeQuery($query, $params);
+    //         if($result){
+    //              $courseId = $db->getConnection()->lastInsertId();
+    //             $course->setId((int)$courseId);  // Set the ID *after* successful insertion
+    //              $this->saveCourseTags($db, $course);
+    //             $this->createdCourses[] = $course;
+    //               return true;
+    //         }
+    //           return false;
+
+    //     }
+    // }
+
+
+      private function saveCourseTags(dataBase $db, Course $course): void
+    {
+       if ($course->getId()) { // Check if course ID exists before deleting tags
+             $query = "DELETE FROM course_tags WHERE course_id = :course_id";
+              $db->executeQuery($query, ['course_id' => $course->getId()]);
+           foreach ($course->getTags() as $tag) {
+                  $query = "INSERT INTO course_tags (course_id, tag_id) VALUES (:course_id, :tag_id)";
+               $db->executeQuery($query, ['course_id' => $course->getId(), 'tag_id' => $tag->getId()]);
+            }
+        }
+    }
    private function loadCreatedCourses(): void
     {
         if ($this->id) {
-            $db = new Database('localhost', 'youdemy', 'root', '');
+            $db = new Database('localhost', 'youdemy', 'root', 'root');
              $courses = Course::getCoursesByTeacherId($db, $this->id);
             if ($courses) {
                $this->createdCourses = $courses;
@@ -23,6 +84,7 @@ class Teacher extends User
     {
         return $this->createdCourses;
     }
+
    public function createCourse(array $data): ?Course
    {
        $course = new Course();
@@ -31,20 +93,25 @@ class Teacher extends User
        $course->setContent(InputValidator::sanitizeString($data['content']));
        $course->setAuthorId($this->id);
        $course->setCategoryId($data['category_id']);
-        $course->setContentType($data['content_type']);
+       $course->setContentType($data['content_type']);
        $course->setContentUrl($data['content_url']);
+       $course->setThumbnailUrl($data['thumbnailUrl']);
        $tagIds = $data['tags']?? [];
        foreach($tagIds as $tagId){
            $tag = Tag::getTagById($tagId);
            if($tag) $course->addTag($tag);
        }
-       $db = new Database('localhost', 'youdemy', 'root', '');
+       $db = new Database('localhost', 'youdemy', 'root', 'root');
      if( $this->saveCourse($db,$course)) {
         $this->createdCourses[] = $course;
          return $course;
+         
        }
        return null;
    }
+
+
+
    public function updateCourse(int $courseId, array $data): ?Course
     {
         $db = new Database('localhost', 'youdemy', 'root', '');
@@ -99,8 +166,8 @@ class Teacher extends User
     {
         // Logic for view teachers statics
         $db = new Database('localhost', 'youdemy', 'root', '');
-         $query = "SELECT COUNT(*) as total FROM courses WHERE teacher_id = :teacher_id";
-         return $db->executeQuery($query,['teacher_id' => $this->id]);
+         $query = "SELECT COUNT(*) as total FROM courses WHERE user_id = :user_id";
+         return $db->executeQuery($query,['user_id' => $this->id]);
      }
 
       public function updateProfile(array $data, ?array $photoFile = null): bool
@@ -124,13 +191,13 @@ class Teacher extends User
     private function saveCourse(dataBase $db, Course $course): bool
     {
         if (($course->getId() !== null)) {
-             $query = "UPDATE courses SET title = :title, description = :description, content = :content, teacher_id = :teacher_id, category_id = :category_id, content_type = :content_type, content_url = :content_url, status = :status, thumbnailUrl = :thumbnailUrl WHERE id = :id";
+             $query = "UPDATE courses SET title = :title, description = :description, content = :content, user_id = :user, category_id = :category_id, content_type = :content_type, content_url = :content_url, status = :status, thumbnailUrl = :thumbnailUrl WHERE id = :id";
              $params = [
                     'id' => $course->getId(),
                     'title' => $course->getTitle(),
                     'description' => $course->getDescription(),
                     'content' => $course->getContent(),
-                    'teacher_id' => $course->getAuthorId(),
+                    'user_id' => $course->getAuthorId(),
                     'category_id' => $course->getCategoryId(),
                     'content_type' => $course->getContentType(),
                     'content_url' => $course->getContentUrl(),
@@ -141,12 +208,12 @@ class Teacher extends User
                  $this->saveCourseTags($db,$course);
                 return $result;
         } else {
-            $query = "INSERT INTO courses (title, description, content, teacher_id, category_id, createdAt, content_type, content_url, status, thumbnailUrl) VALUES (:title, :description, :content, :teacher_id, :category_id, NOW(), :content_type, :content_url, :status, :thumbnailUrl)";
+            $query = "INSERT INTO courses (title, description, content, user_id, category_id, created_at, content_type, content_url, status, thumbnailUrl  ) VALUES (:title, :description, :content, :user_id, :category_id, NOW(), :content_type, :content_url, :status, :thumbnailUrl)";
             $params = [
                    'title' => $course->getTitle(),
                     'description' => $course->getDescription(),
                     'content' => $course->getContent(),
-                    'teacher_id' => $course->getAuthorId(),
+                    'user_id' => $course->getAuthorId(),
                     'category_id' => $course->getCategoryId(),
                     'content_type' => $course->getContentType(),
                     'content_url' => $course->getContentUrl(),
@@ -161,15 +228,15 @@ class Teacher extends User
               return $result;
         }
     }
-        private function saveCourseTags(dataBase $db, Course $course): void
-    {
-        $query = "DELETE FROM course_tags WHERE course_id = :course_id";
-         $db->executeQuery($query,['course_id' => $course->getId()]);
-        foreach($course->getTags() as $tag){
-          $query = "INSERT INTO course_tags (course_id, tag_id) VALUES (:course_id, :tag_id)";
-         $db->executeQuery($query,['course_id' => $course->getId(), 'tag_id' => $tag->getId()]);
-        }
-    }
+    //     private function saveCourseTags(dataBase $db, Course $course): void
+    // {
+    //     $query = "DELETE FROM course_tags WHERE course_id = :course_id";
+    //      $db->executeQuery($query,['course_id' => $course->getId()]);
+    //     foreach($course->getTags() as $tag){
+    //       $query = "INSERT INTO course_tags (course_id, tag_id) VALUES (:course_id, :tag_id)";
+    //      $db->executeQuery($query,['course_id' => $course->getId(), 'tag_id' => $tag->getId()]);
+    //     }
+    // }
                                                                                                                                                                                                                                                                                                                                                        
     
  
