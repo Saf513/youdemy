@@ -102,7 +102,7 @@ include './../common/header.php';
                 </select>
             </div>
             <button type="submit" 
-                    class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    class="px-6 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-300">
                 Filtrer
             </button>
         </div>
@@ -113,7 +113,7 @@ include './../common/header.php';
             $course = new Course();
             $course->loadData($courseData, $db);
         ?>
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden transform transition-transform duration-300 hover:scale-105">
                 <div class="aspect-w-16 aspect-h-9">
                     <?php
                     $imageUrl = $course->getThumbnailUrl() 
@@ -134,7 +134,7 @@ include './../common/header.php';
                     </p>
                     <div class="flex justify-between items-center">
                         <a href="view.php?id=<?= $course->getId() ?>" 
-                           class="text-blue-600 hover:underline">
+                           class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-300">
                             En savoir plus
                         </a>
                     </div>
@@ -147,21 +147,21 @@ include './../common/header.php';
     <div class="mt-8 flex justify-center space-x-2 mb-4">
         <?php if ($page > 1): ?>
             <a href="?page=<?= $page - 1 ?>&category=<?= $categoryId ?>&search=<?= htmlspecialchars($search) ?>" 
-               class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100">
+               class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-300">
                 Précédent
             </a>
         <?php endif; ?>
 
         <?php for ($i = 1; $i <= $totalPages; $i++): ?>
             <a href="?page=<?= $i ?>&category=<?= $categoryId ?>&search=<?= htmlspecialchars($search) ?>" 
-               class="px-4 py-2 border <?= $i === $page ? 'bg-blue-600 text-white' : 'border-gray-300 hover:bg-gray-100' ?> rounded">
+               class="px-4 py-2 border <?= $i === $page ? 'bg-purple-600 text-white' : 'bg-white text-purple-600 border-purple-600 hover:bg-purple-600 hover:text-white' ?> rounded transition-colors duration-300">
                 <?= $i ?>
             </a>
         <?php endfor; ?>
 
         <?php if ($page < $totalPages): ?>
             <a href="?page=<?= $page + 1 ?>&category=<?= $categoryId ?>&search=<?= htmlspecialchars($search) ?>" 
-               class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100">
+               class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors duration-300">
                 Suivant
             </a>
         <?php endif; ?>
