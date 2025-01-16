@@ -8,7 +8,7 @@ require_once  './pages/common/header.php' ;
         <div class="md:w-1/2">
             <h1 class="text-4xl md:text-5xl font-playfair font-bold mb-6">Élevez Votre Potentiel avec Nos Cours d'Excellence</h1>
             <p class="text-lg text-gray-700 mb-8">Découvrez une expérience d'apprentissage unique, conçue pour l'élite de demain. Des instructeurs de renommée mondiale, des contenus exclusifs et une plateforme inégalée.</p>
-            <a href="#" class="inline-block bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-md transition-colors duration-300">Explorer nos cours</a>
+            <a href="././pages/courses/course.php" class="inline-block bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-md transition-colors duration-300">Explorer nos cours</a>
         </div>
         <div class="md:w-1/2 md:absolute top-0 right-0 z-0 mb-4 hidden md:block">
           <img src="/public/assets/img/e_learning.jpg" alt="Illustration" class="rounded-lg shadow-xl object-cover h-full ">
