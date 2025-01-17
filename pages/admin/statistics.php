@@ -12,7 +12,7 @@
 </head>
 <body class="font-montserrat bg-gray-50 text-gray-900">
  <div class="flex">
-    <?php include '../common/sidebar.html'; ?>
+    <?php include '../common/header.php'; ?>
         <main class="flex-1 p-6">
             <h1 class="text-3xl font-playfair font-bold mb-8">Statistiques</h1>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">

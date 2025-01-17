@@ -1,356 +1,235 @@
+<?php
+require_once dirname(__DIR__, 2) . '/classes/Auth/Authentification.php';
+require_once dirname(__DIR__, 2) . '/classes/User/Admin.php';
+require_once dirname(__DIR__, 2) . '/classes/Utils/Statistics.php';
+require_once dirname(__DIR__, 2) . '/classes/Auth/Session.php';
+
+
+Session::start();
+
+$user = Authentification::getUser();
+
+if (!$user || $user->getRole() !== 'admin') {
+    header('Location: /pages/auth/login.php');
+    exit();
+}
+$globalStats = Statistics::getGlobalStatistics();
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord Admin | YouDemy</title>
-    <link rel="stylesheet" href="../../public/assets/css/style.css">
-    <link rel="stylesheet" href="../../public/assets/css/responsive.css">
+    <title>Tableau de bord Admin | Youdemy</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&family=Playfair+Display:wght@400;700&display=swap"
-        rel="stylesheet">
+    <link href="/public/assets/css/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        /* Ajouts pour une ambiance plus luxe */
-        .shadow-xl {
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1) !important;
+        .luxe-bg {
+            background: linear-gradient(to right, #3730a3, #7e22ce);
         }
 
-        .bg-gradient-to-r {
-            background-image: linear-gradient(to right, var(--tw-gradient-stops));
+        .luxe-card {
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05), 0 6px 6px rgba(0, 0, 0, 0.04);
+        }
+
+        .side_links svg {
+            transition: .5s transform scale(.7)
+        }
+
+        .side_links:hover svg {
+            transform: scale(1)
+        }
+
+        .side_links {
+            padding: .75rem;
+            transition-property: all;
+            transition-duration: .5s;
+            display: flex;
+            align-items: center;
+            color: #ddd;
+        }
+
+        .side_links :hover {
+            background-color: #191457
         }
     </style>
 </head>
 
-<body class="font-montserrat bg-gray-100 text-gray-800">
-    <div class="flex h-screen">
-        <!-- Sidebar -->
-        <aside class="bg-gray-900 text-white w-64 flex-shrink-0 shadow-lg">
-            <div class="p-4">
-                <h2 class="text-2xl font-bold mb-6 text-center font-playfair">YouDemy Admin</h2>
-                <nav>
-                    <ul class="space-y-2">
-                        <li>
-                            <a href="#" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-800">
-                                <i class="fas fa-home mr-2"></i>Tableau de bord
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-800">
-                                <i class="fas fa-users mr-2"></i>Utilisateurs
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-800">
-                                <i class="fas fa-book mr-2"></i>Cours
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-800">
-                                <i class="fas fa-chart-bar mr-2"></i>Statistiques
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-800">
-                                <i class="fas fa-comments mr-2"></i>Avis
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-800">
-                                <i class="fas fa-money-bill-wave mr-2"></i>Paiements
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-800">
-                                <i class="fas fa-cog mr-2"></i>Paramètres
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-                <div class="mt-8 border-t border-gray-700 pt-4">
-                    <a href="../../pages/admin/profile.php" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-800">
-                        <i class="fas fa-user mr-2"></i>Profil
-                    </a>
-                    <a href="../../pages/auth/logout.php" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-800">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
-                    </a>
-                </div>
-            </div>
-        </aside>
+<body class="font-montserrat bg-gray-100">
 
-        <!-- Main Content -->
-        <main class="flex-1 p-8 overflow-y-auto">
-            <h1 class="text-4xl font-playfair font-bold mb-8 text-gray-900">Tableau de Bord Admin</h1>
+    <?php include_once dirname(__DIR__, 1) . '/common/header.php' ?>
 
-            <!-- Dashboard Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- Card 1: Total Users -->
-                <div class="bg-white p-6 rounded-xl shadow-xl overflow-hidden relative">
-                    <div class="text-3xl font-bold mb-2 text-gray-900">1500</div>
-                    <div class="text-gray-500 text-sm uppercase tracking-wider mb-4">Utilisateurs Totaux</div>
-                    <div class="absolute bottom-0 right-0 h-16 w-16 rounded-full bg-gradient-to-tr from-blue-500 to-blue-300">
+
+    <!-- Hero/Welcome banner  -->
+    <section class="luxe-bg py-24 ">
+        <div class="container mx-auto   px-6">
+            <h1 class="text-4xl    font-playfair  text-white   font-bold   mb-4   text-center    md:text-left   "> Dashboard admin </h1>
+        </div>
+    </section>
+
+
+    <div class="container mx-auto mt-10 px-4 md:px-0">
+        <div class="lg:flex">
+
+            <aside class="w-full  lg:w-1/5  bg-white p-6 rounded-lg   luxe-shadow    mb-6 lg:mb-0 mr-6">
+                <h3 class="text-lg font-bold mb-4   ">WELCOME <span id="sidebar-user-name"><?= htmlspecialchars($user->getNom()) ?> </span> </h3>
+                <ul class="space-y-2  ">
+                    <li><a href="/pages/admin/index.php" class="admin-link     flex  items-center  rounded-md      hover:bg-gray-700 transition transform duration-200     p-2"> <i class="fa-solid fa-house "> </i><span> Tableau de bord</span> </a></li>
+                    <li> <a href="/pages/admin/manage-users.php" class="admin-link   flex items-center  rounded-md   hover:bg-gray-700    transition transform duration-200     p-2"> <i class="fas  fa-users"> </i> <span> Utilisateurs</span> </a> </li>
+                    <li> <a href="/pages/admin/manage-courses.php" class=" admin-link      flex items-center  rounded-md hover:bg-gray-700   transition transform duration-200      p-2"> <i class="fas  fa-book "> </i> <span>Cours </span> </a> </li>
+                    <li><a href="#" class="admin-link  flex items-center   rounded-md     hover:bg-gray-700  transition transform duration-200    p-2"> <i class="fas  fa-chart-bar "> </i> <span> Statistiques </span> </a> </li>
+                    <li> <a href="#" class=" admin-link  flex  items-center rounded-md  hover:bg-gray-700   transition transform duration-200    p-2"> <i class="fas fa-comments"> </i> <span> Avis </span> </a></li>
+                    <li> <a href="#" class="admin-link   flex   items-center rounded-md     hover:bg-gray-700  transition transform duration-200       p-2"> <i class="fas fa-money-bill-wave "> </i> <span> Paiement </span> </a> </li>
+                    <hr class="my-4  border-gray-700   ">
+                    <li> <a href="/pages/admin/profile.php" class="admin-link   flex    items-center  rounded-md   hover:bg-gray-700 transition transform duration-200     p-2"> <i class="fas    fa-user"></i> <span> Profile </span> </a> </li>
+                    <li> <a href="/pages/auth/logout.php" class="  admin-link  text-red-500  flex items-center  rounded-md  hover:bg-gray-700  transition transform duration-200    p-2  "> <i class="fas  fa-sign-out-alt "> </i> <span> Déconnexion </span> </a> </li>
+                </ul>
+            </aside> <!--  main page  with card like display -->
+            <main class=" w-full  lg:w-4/5    p-6     border bg-white     luxe-shadow  ">
+
+                <h2 class="text-2xl  text-purple-700    font-bold mb-4"> Overview </h2>
+                <div class="grid    grid-cols-1    md:grid-cols-3    gap-4"> <!-- Card : Total Courses -->
+                    <div class=" bg-purple-200        items-center    relative      h-48  rounded-lg flex      px-4       luxe-shadow   "> <svg class="   absolute   top-0   left-0 opacity-40  m-4  fill-[#44076d]" viewBox="0  0   24  24" width="60px">
+                            <path d="M17   3.11A6    6 0   0 0   7   3v2.17l-2.01-.48A3  3   0   0 0   3 7.1v13.78A.224.224  0  0  0   3.03  21h17.94a.224.224 0 0 0   .03-.05V7.1A3   3 0    0 0 17 3.11zM5    7.1c.1.13.23.38.58.54L6   8v11H4V7.93l.66.47A2 2  0    0    1    5 7.1zM19  20H5V7h14.18L17  7.9a2  2  0    0   1   .94.33A2.999    2.999    0    0 0   19   7.1z" />
+                        </svg>
+                        <p class=" text-gray-600     "> Total Coures </p>
+                        <h3 id="courses-total" class=" text-5xl    font-bold text-indigo-900 "> <?php echo  htmlspecialchars($globalStats['totalCourses']) ?></h3>
                     </div>
-                    <span
-                        class="absolute bottom-0 right-0 m-2 w-12 h-12 flex justify-center items-center text-white text-2xl"><i
-                            class="fas fa-users"></i></span>
-                </div>
 
-                <!-- Card 2: Total Courses -->
-                <div class="bg-white p-6 rounded-xl shadow-xl overflow-hidden relative">
-                    <div class="text-3xl font-bold mb-2 text-gray-900">350</div>
-                    <div class="text-gray-500 text-sm uppercase tracking-wider mb-4">Cours Disponibles</div>
-                    <div class="absolute bottom-0 right-0 h-16 w-16 rounded-full bg-gradient-to-tr from-green-500 to-green-300">
+
+                    <div class="luxe-shadow    bg-blue-200    px-4 py-4    h-48  rounded-lg flex    flex-col   items-start  ">
+                        <h3 class="text-lg   font-medium text-blue-600   ">Top 3 Users </h3>
+                        <ul class="  w-full    h-32     space-y-1" id="last-registered-user">
+                            <?php
+                            if ($globalStats['topTeachers']  && count($globalStats['topTeachers']) > 0) {
+                                foreach ($globalStats['topTeachers']     as  $user) { ?> <li class="flex     items-center    justify-between  transition transform    duration-300  "> <?= htmlspecialchars($user["nom"]); ?> <span class=" text-purple-500  "> <?= htmlspecialchars($user['courseCount']); ?> </span> </li> <?php   }
+                                                                                                                                                                                                                                                                                                    } else {
+                                                                                                                                                                                                                                                                                                        echo   " There is no Teachers registred ";
+                                                                                                                                                                                                                                                                                                    }      ?> </ul>
                     </div>
-                    <span
-                        class="absolute bottom-0 right-0 m-2 w-12 h-12 flex justify-center items-center text-white text-2xl"><i
-                            class="fas fa-book-open"></i></span>
-                </div>
 
-                <!-- Card 3: Active Users -->
-                <div class="bg-white p-6 rounded-xl shadow-xl overflow-hidden relative">
-                    <div class="text-3xl font-bold mb-2 text-gray-900">800</div>
-                    <div class="text-gray-500 text-sm uppercase tracking-wider mb-4">Utilisateurs Actifs</div>
-                    <div
-                        class="absolute bottom-0 right-0 h-16 w-16 rounded-full bg-gradient-to-tr from-yellow-500 to-yellow-300">
+
+                    <div class="luxe-shadow    flex  flex-col      px-4 py-4      items-start    rounded-lg       h-48 bg-orange-200  ">
+                        <h3 class="text-lg text-orange-800  font-medium  "> Most Enroled Course </h3>
+                        <p id="most-enrolled" class="text-lg     font-bold     "> <?php if ($globalStats['mostEnrolledCourse']) {
+                                                                                        echo  htmlspecialchars(substr($globalStats['mostEnrolledCourse']["title"], 0, 25)) . "... with  "  . htmlspecialchars($globalStats['mostEnrolledCourse']["students_count"]);
+                                                                                    } else   echo  ' no Course have been enroled yet  ';    ?> </p>
                     </div>
-                    <span
-                        class="absolute bottom-0 right-0 m-2 w-12 h-12 flex justify-center items-center text-white text-2xl"><i
-                            class="fas fa-user-check"></i></span>
-                </div>
-
-                <!-- Card 4: Revenue -->
-                <div class="bg-white p-6 rounded-xl shadow-xl overflow-hidden relative">
-                    <div class="text-3xl font-bold mb-2 text-gray-900">$55,000</div>
-                    <div class="text-gray-500 text-sm uppercase tracking-wider mb-4">Revenu Total</div>
-                    <div
-                        class="absolute bottom-0 right-0 h-16 w-16 rounded-full bg-gradient-to-tr from-purple-500 to-purple-300">
+                    <div class="bg-green-200 luxe-shadow rounded-lg   p-4 h-48   ">
+                        <h3 class="  text-green-700  text-lg  font-bold"> Course Per category </h3><canvas id="coursesPerCategory"></canvas>
                     </div>
-                    <span
-                        class="absolute bottom-0 right-0 m-2 w-12 h-12 flex justify-center items-center text-white text-2xl"><i
-                            class="fas fa-dollar-sign"></i></span>
                 </div>
 
-                <!-- Card 5: new Users -->
-                <div class="bg-white p-6 rounded-xl shadow-xl overflow-hidden relative">
-                    <div class="text-3xl font-bold mb-2 text-gray-900">120</div>
-                    <div class="text-gray-500 text-sm uppercase tracking-wider mb-4">Nouveaux utilisateurs</div>
-                    <div
-                        class="absolute bottom-0 right-0 h-16 w-16 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-300">
-                    </div>
-                    <span
-                        class="absolute bottom-0 right-0 m-2 w-12 h-12 flex justify-center items-center text-white text-2xl"><i
-                            class="fas fa-user-plus"></i></span>
-                </div>
+                <!-- user List Table and Charts-->
 
-                <!-- Card 6: Completion rate -->
-                <div class="bg-white p-6 rounded-xl shadow-xl overflow-hidden relative">
-                    <div class="text-3xl font-bold mb-2 text-gray-900">70%</div>
-                    <div class="text-gray-500 text-sm uppercase tracking-wider mb-4">Taux de Complétion</div>
-                    <div
-                        class="absolute bottom-0 right-0 h-16 w-16 rounded-full bg-gradient-to-tr from-pink-500 to-pink-300">
-                    </div>
-                    <span
-                        class="absolute bottom-0 right-0 m-2 w-12 h-12 flex justify-center items-center text-white text-2xl"><i
-                            class="fas fa-percent"></i></span>
-                </div>
+                <div class=" grid grid-cols-1  lg:grid-cols-2    mt-8  gap-6   ">
+                    <div class="luxe-shadow    p-6     bg-white   rounded-md   ">
 
-                <!-- Card 7: Feedback count -->
-                <div class="bg-white p-6 rounded-xl shadow-xl overflow-hidden relative">
-                    <div class="text-3xl font-bold mb-2 text-gray-900">80</div>
-                    <div class="text-gray-500 text-sm uppercase tracking-wider mb-4">Avis reçus</div>
-                    <div
-                        class="absolute bottom-0 right-0 h-16 w-16 rounded-full bg-gradient-to-tr from-teal-500 to-teal-300">
-                    </div>
-                    <span
-                        class="absolute bottom-0 right-0 m-2 w-12 h-12 flex justify-center items-center text-white text-2xl"><i
-                            class="fas fa-comment"></i></span>
-                </div>
-
-                <!-- Card 8: pending payments -->
-                <div class="bg-white p-6 rounded-xl shadow-xl overflow-hidden relative">
-                    <div class="text-3xl font-bold mb-2 text-gray-900">15</div>
-                    <div class="text-gray-500 text-sm uppercase tracking-wider mb-4">Paiements en attente</div>
-                    <div
-                        class="absolute bottom-0 right-0 h-16 w-16 rounded-full bg-gradient-to-tr from-orange-500 to-orange-300">
-                    </div>
-                    <span
-                        class="absolute bottom-0 right-0 m-2 w-12 h-12 flex justify-center items-center text-white text-2xl"><i
-                            class="fas fa-exclamation-triangle"></i></span>
-                </div>
-            </div>
-
-            <!-- Data Tables -->
-             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-                <div>
-                    <h2 class="text-2xl font-bold mb-4 text-gray-900">Utilisateurs Récents</h2>
-                    <div class="shadow-xl rounded-lg overflow-hidden">
-                        <table class="min-w-full leading-normal table-auto">
-                            <thead class="bg-gray-200">
+                        <h2 class="text-xl mb-2  text-purple-700   font-bold"> Users Reccent List </h2>
+                        <table class="  leading-normal       min-w-full ">
+                            <thead class="bg-gray-200    ">
                                 <tr>
-                                    <th
-                                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Nom</th>
-                                    <th
-                                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Email</th>
-                                    <th
-                                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Inscription</th>
-                                        <th
-                                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Statut</th>
+                                    <th class="px-6  py-3    border-b-2    text-left   font-semibold     text-gray-600     tracking-wider  uppercase     "> Name </th>
+                                    <th class="px-6    py-3     border-b-2     text-left    font-semibold      text-gray-600      tracking-wider   uppercase"> Email </th>
+                                    <th class=" px-6  py-3      border-b-2    text-left    font-semibold      text-gray-600   tracking-wider   uppercase"> Subscription </th>
+                                    <th class="px-6      py-3   border-b-2       text-left   font-semibold      text-gray-600 tracking-wider uppercase   "> State </th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                   <td class="px-6 py-4 border-b border-gray-200 text-sm">John Doe</td>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">john.doe@example.com</td>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">15/01/2024</td>
-                                     <td class="px-6 py-4 border-b border-gray-200 text-sm">
-                                         <span class="inline-flex px-2 text-xs font-semibold leading-5 text-green-800 bg-green-200 rounded-full">Actif</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">Jane Smith</td>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">jane.smith@example.com</td>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">20/01/2024</td>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">
-                                          <span class="inline-flex px-2 text-xs font-semibold leading-5 text-red-800 bg-red-200 rounded-full">Inactif</span>
-                                    </td>
-                                </tr>
+                            <tbody> <?php if (isset($globalStats['mostEnrolledCourse'])) :     ?>
+                                    <tr>
+                                        <td class="px-6   py-4   border-b    border-gray-200  text-sm    "> Data goes here </td>
+                                        <td class="px-6     py-4   border-b      text-sm border-gray-200"> data@goes.com </td>
+                                        <td class="px-6      py-4   border-b      text-sm border-gray-200  ">23 05-2023 </td>
+                                        <td class="px-6    py-4     border-b border-gray-200 text-sm"> <span class="   inline-flex px-2 text-xs font-semibold     text-green-800  leading-5  bg-green-200 rounded-full     "> Active </span> </td>
+                                    </tr> <?php endif   ?>
                             </tbody>
                         </table>
                     </div>
-                </div>
-                <div>
-                    <h2 class="text-2xl font-bold mb-4 text-gray-900">Cours Récents</h2>
-                    <div class="shadow-xl rounded-lg overflow-hidden">
-                        <table class="min-w-full leading-normal table-auto">
-                            <thead class="bg-gray-200">
-                                <tr>
-                                    <th
-                                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Titre du cours</th>
-                                    <th
-                                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Auteur</th>
-                                    <th
-                                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Date de publication</th>
-                                          <th
-                                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">Développement Web</td>
-                                     <td class="px-6 py-4 border-b border-gray-200 text-sm">Sarah Leduc</td>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">25/01/2024</td>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">
-                                        <span class="inline-flex px-2 text-xs font-semibold leading-5 text-green-800 bg-green-200 rounded-full">Publié</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">Photographie numérique</td>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">Michel Lambert</td>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">30/01/2024</td>
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm">
-                                        <span class="inline-flex px-2 text-xs font-semibold leading-5 text-red-800 bg-red-200 rounded-full">Non publié</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                    <div class="    luxe-shadow     rounded-lg      bg-white    p-6 ">
+                        <h2 class="text-xl font-bold text-purple-600   mb-4"> Users Per Roles Graph </h2>
 
-            <!-- Charts section -->
-            <div class="mt-8">
-                <h2 class="text-2xl font-bold mb-4 text-gray-900">Visualisation des données</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div class="bg-white shadow-xl rounded-xl p-6">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-900">Répartition des cours par catégorie</h3>
-                        <canvas id="courseCategoryChart"></canvas>
-                      </div>
-                      <div class="bg-white shadow-xl rounded-xl p-6">
-                            <h3 class="text-xl font-semibold mb-4 text-gray-900">Nombre d'utilisateurs par rôle</h3>
-                           <canvas id="userRoleChart"></canvas>
+                        <canvas id="userRoleChart"></canvas>
                     </div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="../../script.js"></script>
+
+    <?php include_once  dirname(__DIR__,   1) . '/common/footer.php';   ?>
     <script>
-        const courseCategoryChartCanvas = document.getElementById('courseCategoryChart');
-        const userRoleChartCanvas = document.getElementById('userRoleChart');
-
-         // Données d'exemple pour le graphique des catégories de cours
-        const courseCategoryData = {
-            labels: ['Développement Web', 'Marketing Digital', 'Design Graphique', 'Photographie'],
-            datasets: [{
-                label: 'Nombre de cours',
-                data: [120, 80, 50, 100],
-                backgroundColor: ['rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(255, 205, 86)', 'rgb(75, 192, 192)'],
-            }]
-        };
-         // Données d'exemple pour le graphique du nombre d'utilisateurs par rôle
-        const userRoleData = {
-             labels: ['Étudiant', 'Formateur', 'Admin'],
-             datasets: [{
-                label: 'Nombre d\'utilisateurs',
-                data: [1200, 300, 10],
-                backgroundColor: ['rgb(54, 162, 235)', 'rgb(75, 192, 192)', 'rgb(255, 99, 132)'],
-             }]
-        };
+        document.getElementById("sidebar-user-name").textContent = "<?php echo  htmlspecialchars($user->getFullName());  ?>";
 
 
-       new Chart(courseCategoryChartCanvas, {
-            type: 'pie',
-            data: courseCategoryData,
-             options: {
-                   responsive: true,
-                  maintainAspectRatio: false,
+        const coursesCategoryData = JSON.parse(`<?php echo json_encode($globalStats['coursesPerCategory'] ?? [],  JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE); ?>`)
+        const userRoles = JSON.parse(`<?php echo json_encode($globalStats['topTeachers']   ?? [],  JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);   ?>`);
+        const userChart = document.getElementById("userRoleChart");
+
+
+
+        new Chart(userChart, {
+
+            type: "bar",
+            data: {
+                labels: [...userRoles.map(u => u.nom)],
+                datasets: [{
+                    data: [...userRoles.map(user => user.courseCount)],
+                    backgroundColor: ["#50a8f8", '#05a15a', "#b20664", ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'bottom'
-                    },
-                        title: {
-                          display: true,
-                          text: 'Répartition des cours par catégorie'
-                      }
-                  }
-              }
-          });
-       new Chart(userRoleChartCanvas, {
-            type: 'bar',
-            data: userRoleData,
-           options: {
-                responsive: true,
-               maintainAspectRatio: false,
-              plugins: {
-                  legend: {
                         display: false
-                  },
-                  title: {
-                      display: true,
-                      text: 'Nombre d\'utilisateurs par rôle'
-                  }
-              },
-              scales: {
-                y: {
-                    beginAtZero: true
-                  }
-              }
-           }
-      });
+                    },
+                    title: {
+                        display: true,
+                        text: 'Number of courses per each teacher'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+
+
+        })
+
+        const categoryChart = new Chart(document.getElementById('coursesPerCategory'), {
+            type: 'doughnut',
+            data: {
+                labels: [...coursesCategoryData.map(cat => cat.name)],
+                datasets: [{
+                    label: "Number of Coures by Category",
+                    data: [...coursesCategoryData.map(cat => cat.courseCount)],
+                    backgroundColor: ["#4d7de4", "#b28cc8", "#4cb982", ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: "bottom"
+                    }
+                },
+            }
+        });
     </script>
 </body>
 
 </html>
+je veuw avoir le meme tableau de board avec un structure de luxe et tout es donne dynaimiques pour tous types user

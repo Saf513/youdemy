@@ -150,7 +150,7 @@ class Teacher extends User
 
     public function deleteCourse(int $courseId): bool
     {
-       $db = new Database('localhost', 'youdemy', 'root', '');
+       $db = new Database('localhost', 'youdemy', 'root', 'root');
         $course = Course::getCourseById($db, $courseId);
         if ($course && $course->getAuthorId() == $this->id) {
             $result = $course->delete($db);

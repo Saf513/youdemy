@@ -120,7 +120,7 @@ $teacherCourses = Course::getCoursesByTeacherId($db, $user->getId());
                                         <a href="/pages/courses/edit_course.php?id=<?php echo $course['id']; ?>" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <a href="edit_course.php?id=<?php echo $course['id']; ?>" class="text-indigo-600 hover:text-indigo-900">delete</a>
+                                        <a href="/pages/courses/delete_course.php?id=<?php echo $course['id']; ?>" class="text-indigo-600 hover:text-indigo-900">delete</a>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>

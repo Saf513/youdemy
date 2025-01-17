@@ -75,4 +75,41 @@ class Statistics {
             'recent_enrollments' => $recentEnrollmentsResult[0]['recent_enrollments'] ?? 0
         ];
     }
+
+    public static function getGlobalStatistics(): array
+    {
+        $db = new Database('localhost', 'youdemy', 'root', 'root');
+        
+           $totalCoursesQuery = "SELECT COUNT(*) AS totalCourses FROM courses";
+        $totalCoursesResult = $db->executeQuery($totalCoursesQuery);
+        $totalCourses = is_array($totalCoursesResult) && isset($totalCoursesResult[0]['totalCourses'])  ? (int)$totalCoursesResult[0]['totalCourses'] : 0;
+
+
+        $coursesPerCategoryQuery = " SELECT c.name, COUNT(co.id) AS courseCount   FROM categories c   LEFT JOIN courses co ON c.id = co.category_id     GROUP BY c.name    ";
+
+       $coursesPerCategory =  $db->executeQuery($coursesPerCategoryQuery)?? [];
+
+
+             // Most enroled course
+          $mostEnrolledCourseQuery  = " SELECT c.title, COUNT(es.student_id) as students_count     FROM courses c   INNER JOIN enrollments es ON c.id = es.course_id   GROUP BY c.id    ORDER BY students_count DESC   LIMIT 1    ";
+
+
+            $mostEnrolledCourse= $db->executeQuery($mostEnrolledCourseQuery) ?? null;
+                 // Top 3 teachers
+            $topTeachersQuery ="
+           SELECT u.full_name AS nom, COUNT(co.id) AS courseCount     FROM users u    LEFT JOIN courses co ON u.id = co.teacher_id      WHERE u.role = 'teacher'   GROUP BY u.id   ORDER BY courseCount DESC      LIMIT 3 ";
+          $topTeachers = $db->executeQuery($topTeachersQuery) ?? [];
+
+
+      return [
+            'totalCourses' => $totalCourses,
+                'coursesPerCategory' => $coursesPerCategory,
+               'mostEnrolledCourse' => is_array($mostEnrolledCourse) ?   $mostEnrolledCourse[0]: [],
+               'topTeachers' => $topTeachers,
+       ];
+
+
+
+   }
+
 }
