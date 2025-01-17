@@ -8,27 +8,28 @@ require_once dirname(__DIR__, 2) . '/classes/Auth/Session.php';
 Session::start();
 
 $user = Authentification::getUser();
+
 if (!$user || ($user->getRole() !== 'student' && $user->getRole() !== 'teacher')) {
     header('Location: /pages/auth/login.php');
     exit();
 }
+
 $db = new Database('localhost', 'youdemy', 'root', 'root');
 
 $fullId = $_GET['id'] ?? null;
 
-// Séparer le premier ID s'il y a plusieurs "id" dans la chaîne.
 if ($fullId) {
-    $parts = explode('?', $fullId); // Diviser la chaîne à partir du premier '?'.
-    $courseId = $parts[0]; // Obtenir uniquement le premier segment (avant '?').
+    $parts = explode('?', $fullId); 
+    $courseId = $parts[0]; 
 }
 
-// Validez que l'ID est un entier positif.
-if (!$courseId || !ctype_digit($courseId)) {
-    header('Location: /pages/student/dashboard.php');
-    exit();
-}
+// if (!$courseId || !ctype_digit($courseId)) {
+//     header('Location: /pages/student/dashboard.php');
+//     exit();
+// }
 
-$courseId = (int)$courseId; // Convertir en entier.
+$courseId = (int)$courseId; 
+
 $course = Course::getCourseById($db, $courseId);
 
 if (!$course) {
@@ -36,8 +37,8 @@ if (!$course) {
     exit();
 }
 
-var_dump($courseId);
 if (!$courseId) {
+
     header('Location: /pages/student/dashboard.php');
     exit();
 }
@@ -79,9 +80,10 @@ if ($user->getRole() === 'student') {
             background-position: center;
         }
     </style>
+        <?php include_once dirname(__DIR__, 1) . '/common/header.php'; ?>
+
 </head>
 <body class="bg-gray-50 font-sans">
-    <?php include_once dirname(__DIR__, 1) . '/common/header.php'; ?>
 
     <!-- Hero Section -->
     <section class="relative luxury-gradient py-24 overflow-hidden">
@@ -93,8 +95,8 @@ if ($user->getRole() === 'student') {
                 <p class="text-xl text-indigo-100 mb-8 leading-relaxed">
                     <?php echo htmlspecialchars($course->getDescription()); ?>
                 </p>
-                <?php if(!$isEnrolled): ?>
-                    <a href="/pages/course/enroll.php?id=<?php echo $course->getId(); ?>" 
+                < <?php if(!$isEnrolled): ?> 
+                    <a href="/pages/courses/enroll.php?id=<?php echo $course->getId(); ?>" 
                        class="inline-block bg-white text-indigo-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-indigo-50 transition duration-200">
                         Enroll Now
                     </a>
@@ -159,7 +161,7 @@ if ($user->getRole() === 'student') {
                                      class="w-12 h-12 rounded-full" alt="Instructor">
                                 <div>
                                     <h4 class="font-medium text-gray-900">Course Instructor</h4>
-                                    <p class="text-gray-<p class="text-gray-600">Professor</p>
+                                    <p class="text-gray text-gray-600">Professor</p>
                                 </div>
                             </div>
 

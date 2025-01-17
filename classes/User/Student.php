@@ -32,6 +32,7 @@ class Student extends User
         $db = new Database('localhost', 'youdemy', 'root', 'root');
         $query = "INSERT INTO enrollments (student_id, course_id) VALUES (:student_id, :course_id)";
         $params = ['student_id' => $this->id, 'course_id' => $course->getId()];
+        var_dump($this->enrolledCourses);
         if ($db->executeQuery($query, $params)) {
             $this->enrolledCourses[] = $course;
             return true;

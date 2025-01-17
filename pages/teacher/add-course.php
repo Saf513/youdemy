@@ -14,10 +14,10 @@ require_once dirname(__DIR__, 2) . '/classes/Database/Database.php';
 session_start();
 
 // --Vérification de l'authentification et du rôle
-// if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
-//     header('Location: http://localhost:3000/pages/auth/login.php');
-//     exit();
-// }
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
+    header('Location: http://localhost:3000/pages/auth/login.php');
+    exit();
+}
 
 $teacher = new Teacher($_SESSION['user_id']);
 
@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Course Thumbnail</label>
                     <input type="file" name="thumbnail" accept="image/*" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
                     <p class="mt-1 text-sm text-gray-500">Accepted formats: JPG, PNG, GIF</p>
                 </div>
 
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Course Content</label>
                     <input type="file" name="course_content" accept="video/mp4,application/pdf" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
                     <p class="mt-1 text-sm text-gray-500">Accepted formats: MP4, PDF</p>
                 </div>
 

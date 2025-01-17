@@ -1,5 +1,9 @@
 <?php
 require_once __DIR__ . '\User.php';
+require_once dirname(__DIR__, 2) . '/classes/Course/Course.php';
+require_once dirname(__DIR__, 2) . '/classes/Security/Inputvalidator.php';
+
+
 class Teacher extends User
 {
      private array $createdCourses = [];
@@ -114,10 +118,13 @@ class Teacher extends User
 
    public function updateCourse(int $courseId, array $data): ?Course
     {
-        $db = new Database('localhost', 'youdemy', 'root', '');
+        $db = new Database('localhost', 'youdemy', 'root', 'root');
+
         $course = Course::getCourseById($db, $courseId);
+
         if($course && $course->getAuthorId() == $this->id) {
-            $course->setTitle(InputValidator::sanitizeString($data['title'] ?? $course->getTitle()));
+
+            $course->setTitle(InputValidator::sanitizeString($data['title'] ));
             $course->setDescription(InputValidator::sanitizeString($data['description'] ?? $course->getDescription()));
             $course->setContent(InputValidator::sanitizeString($data['content'] ?? $course->getContent()));
             $course->setContentType($data['content_type']?? $course->getContentType());
@@ -133,6 +140,7 @@ class Teacher extends User
                 if ($tag) $course->addTag($tag);
             }
              if($this->saveCourse($db, $course)){
+                var_dump("ffff");
                $this->loadCreatedCourses();
                  return $course;
              }
@@ -190,44 +198,57 @@ class Teacher extends User
     }
     private function saveCourse(dataBase $db, Course $course): bool
     {
-        if (($course->getId() !== null)) {
-             $query = "UPDATE courses SET title = :title, description = :description, content = :content, user_id = :user, category_id = :category_id, content_type = :content_type, content_url = :content_url, status = :status, thumbnailUrl = :thumbnailUrl WHERE id = :id";
-             $params = [
-                    'id' => $course->getId(),
-                    'title' => $course->getTitle(),
-                    'description' => $course->getDescription(),
-                    'content' => $course->getContent(),
-                    'user_id' => $course->getAuthorId(),
-                    'category_id' => $course->getCategoryId(),
-                    'content_type' => $course->getContentType(),
-                    'content_url' => $course->getContentUrl(),
-                    'status' => $course->getStatus(),
-                    'thumbnailUrl' => $course->getThumbnailUrl(),
-                 ];
-               $result =  $db->executeQuery($query, $params);
-                 $this->saveCourseTags($db,$course);
-                return $result;
-        } else {
-            $query = "INSERT INTO courses (title, description, content, user_id, category_id, created_at, content_type, content_url, status, thumbnailUrl  ) VALUES (:title, :description, :content, :user_id, :category_id, NOW(), :content_type, :content_url, :status, :thumbnailUrl)";
+        if ($course->getId() !== null) { 
+            
+            $query = "UPDATE courses SET title = :title, description = :description, content = :content, 
+                      user_id = :user_id, category_id = :category_id, content_type = :content_type, 
+                      content_url = :content_url, status = :status, thumbnailUrl = :thumbnailUrl 
+                      WHERE id = :id";
             $params = [
-                   'title' => $course->getTitle(),
-                    'description' => $course->getDescription(),
-                    'content' => $course->getContent(),
-                    'user_id' => $course->getAuthorId(),
-                    'category_id' => $course->getCategoryId(),
-                    'content_type' => $course->getContentType(),
-                    'content_url' => $course->getContentUrl(),
-                      'status' => $course->getStatus(),
-                     'thumbnailUrl' => $course->getThumbnailUrl(),
-                ];
-             $result = $db->executeQuery($query, $params);
-            if($result){
-                $course->setId((int) $db->getConnection()->lastInsertId());
-                  $this->saveCourseTags($db, $course);
-              }
-              return $result;
+                'id' => $course->getId(),
+                'title' => $course->getTitle(),
+                'description' => $course->getDescription(),
+                'content' => $course->getContent(),
+                'user_id' => $course->getAuthorId(),
+                'category_id' => $course->getCategoryId(),
+                'content_type' => $course->getContentType(),
+                'content_url' => $course->getContentUrl(),
+                'status' => $course->getStatus(),
+                'thumbnailUrl' => $course->getThumbnailUrl(),
+            ];
+            try {
+                $result = $db->executeQuery($query, $params);
+                $this->saveCourseTags($db, $course); // Save tags for the course
+                return $result !== false; // Ensure it returns true/false
+            } catch (PDOException $e) { // More specific exception
+                echo 'Database error: ' . $e->getMessage();
+                return false;
+            }
+        } else { // Insert new course if no ID exists
+            $query = "INSERT INTO courses (title, description, content, user_id, category_id, 
+                      created_at, content_type, content_url, status, thumbnailUrl) 
+                      VALUES (:title, :description, :content, :user_id, :category_id, NOW(), 
+                              :content_type, :content_url, :status, :thumbnailUrl)";
+            $params = [
+                'title' => $course->getTitle(),
+                'description' => $course->getDescription(),
+                'content' => $course->getContent(),
+                'user_id' => $course->getAuthorId(),
+                'category_id' => $course->getCategoryId(),
+                'content_type' => $course->getContentType(),
+                'content_url' => $course->getContentUrl(),
+                'status' => $course->getStatus(),
+                'thumbnailUrl' => $course->getThumbnailUrl(),
+            ];
+            $result = $db->executeQuery($query, $params);
+            if ($result) {
+                $course->setId((int)$db->getConnection()->lastInsertId()); // Set ID for the new course
+                $this->saveCourseTags($db, $course); // Save tags for the new course
+            }
+            return $result !== false; // Ensure it returns true/false
         }
     }
+    
     //     private function saveCourseTags(dataBase $db, Course $course): void
     // {
     //     $query = "DELETE FROM course_tags WHERE course_id = :course_id";

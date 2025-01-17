@@ -8,10 +8,6 @@ require_once dirname(__DIR__, 2) . '/classes/Auth/Session.php';
 Session::start();
 
 $user = Authentification::getUser();
-// if (!$user || $user->getRole() !== 'student') {
-//     header('Location: /pages/auth/login.php');
-//     exit();
-// }
 
 $courseId = $_GET['id'] ?? null;
 
@@ -24,13 +20,25 @@ $db = new Database('localhost', 'youdemy', 'root', 'root');
 $course = Course::getCourseById($db, $courseId);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_enrollment'])) {
-
-    $student = new Student($user->getId());
-    var_dump($student->enrollCourse($course));
-    if ($student->enrollCourse($course)) {
-
-        // header("Location: http://localhost:3000/pages/courses/view.php?id=5?id=" . $course->getId() . "&enrolled=success");
-        // exit();
+    if (!$course) {
+        $errorMessage = "Course not found.";
+    } elseif (!isset($_POST['terms'])) {
+        $errorMessage = "You must agree to the terms and conditions.";
+    } else {
+        try {
+            $student = new Student($user->getId());
+            $enrollResult = $student->enrollCourse($course);
+            
+            if ($enrollResult) {
+                header("Location: /pages/courses/view.php?id=" . $course->getId() . "&enrolled=success");
+                exit();
+            } else {
+                $errorMessage = "Enrollment failed. You might already be enrolled in this course.";
+            }
+        } catch (Exception $e) {
+            error_log("Enrollment error: " . $e->getMessage());
+            $errorMessage = "An error occurred during enrollment. Please try again later.";
+        }
     }
 }
 ?>
@@ -58,38 +66,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_enrollment'])
         <div class="max-w-4xl mx-auto">
             <div class="bg-white rounded-2xl card-shadow p-8">
                 <div class="mb-10">
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                        Enroll in Course
-                    </h1>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Enroll in Course</h1>
                     <p class="text-gray-600">
                         Complete your enrollment for <?php echo htmlspecialchars($course->getTitle()); ?>
                     </p>
                 </div>
+
+                <?php if (isset($errorMessage)) : ?>
+                    <div class="bg-red-500 text-white p-4 rounded-lg mb-6">
+                        <?php echo htmlspecialchars($errorMessage); ?>
+                    </div>
+                <?php endif; ?>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-6">
                         <div class="bg-gray-50 p-6 rounded-xl">
                             <h3 class="font-semibold text-gray-900 mb-4">Course Details</h3>
                             <div class="space-y-3">
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-medium">Duration:</span> 6 weeks
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-medium">Level:</span> All levels
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-medium">Certificate:</span> Yes
-                                </p>
+                                <p class="text-sm text-gray-600"><span class="font-medium">Duration:</span> 6 weeks</p>
+                                <p class="text-sm text-gray-600"><span class="font-medium">Level:</span> All levels</p>
+                                <p class="text-sm text-gray-600"><span class="font-medium">Certificate:</span> Yes</p>
                             </div>
                         </div>
 
                         <form method="POST" class="space-y-6">
                             <div class="flex items-center space-x-2">
-                                <input type="checkbox" id="terms" name="terms" required
-                                    class="h-4 w-4 text-indigo-600 rounded">
-                                <label for="terms" class="text-sm text-gray-600">
-                                    I agree to the course terms and conditions
-                                </label>
+                                <input type="checkbox" id="terms" name="terms" required class="h-4 w-4 text-indigo-600 rounded">
+                                <label for="terms" class="text-sm text-gray-600">I agree to the course terms and conditions</label>
                             </div>
                             
                             <button type="submit" name="confirm_enrollment"

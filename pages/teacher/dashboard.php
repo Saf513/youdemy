@@ -117,7 +117,10 @@ $teacherCourses = Course::getCoursesByTeacherId($db, $user->getId());
                                         <?php echo date('Y-m-d', strtotime($course['created_at'])); ?>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <a href="edit_course.php?id=<?php echo $course['id']; ?>" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                        <a href="/pages/courses/edit_course.php?id=<?php echo $course['id']; ?>" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <a href="edit_course.php?id=<?php echo $course['id']; ?>" class="text-indigo-600 hover:text-indigo-900">delete</a>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
